@@ -3,9 +3,6 @@
 # https://askubuntu.com/questions/972516/debian-frontend-environment-variable
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Globally set pip break-system-packages option to avoid having to specify it every time
-ARG PIP_BREAK_SYSTEM_PACKAGES=1
-
 ARG BASE_IMAGE=debian:12
 ARG SLIM_BASE=debian:12-slim
 
@@ -13,7 +10,7 @@ ARG SLIM_BASE=debian:12-slim
 ARG BASE_HOOK=
 
 FROM ${BASE_IMAGE} AS base
-ARG PIP_BREAK_SYSTEM_PACKAGES
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
 ARG BASE_HOOK
 
 RUN sh -c "$BASE_HOOK"
@@ -22,7 +19,7 @@ FROM --platform=${BUILDPLATFORM} debian:12 AS base_host
 ARG PIP_BREAK_SYSTEM_PACKAGES
 
 FROM ${SLIM_BASE} AS slim-base
-ARG PIP_BREAK_SYSTEM_PACKAGES
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
 ARG BASE_HOOK
 
 RUN sh -c "$BASE_HOOK"
@@ -55,7 +52,7 @@ RUN --mount=type=tmpfs,target=/tmp --mount=type=tmpfs,target=/var/cache/apt \
 FROM scratch AS go2rtc
 ARG TARGETARCH
 WORKDIR /rootfs/usr/local/go2rtc/bin
-ADD --link --chmod=755 "https://github.com/AlexxIT/go2rtc/releases/download/v1.9.9/go2rtc_linux_${TARGETARCH}" go2rtc
+ADD --chmod=755 "https://github.com/AlexxIT/go2rtc/releases/download/v1.9.9/go2rtc_linux_${TARGETARCH}" go2rtc
 
 FROM wget AS tempio
 ARG TARGETARCH
@@ -85,7 +82,7 @@ RUN apt-get -qq update \
 RUN --mount=type=bind,source=docker/main/build_ov_model.py,target=/build_ov_model.py \
     mkdir /models && cd /models \
     && wget http://download.tensorflow.org/models/object_detection/ssdlite_mobilenet_v2_coco_2018_05_09.tar.gz \
-    && tar -xvf ssdlite_mobilenet_v2_coco_2018_05_09.tar.gz \
+    && tar -xvf ssdlite_mobilenet_v2_coco_2018_05_09.tar.gz --no-same-owner\
     && python3 /build_ov_model.py
 
 ####
