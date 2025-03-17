@@ -3,6 +3,7 @@
 # https://askubuntu.com/questions/972516/debian-frontend-environment-variable
 ARG DEBIAN_FRONTEND=noninteractive
 
+<<<<<<< Updated upstream
 ARG BASE_IMAGE=debian:11
 ARG SLIM_BASE=debian:11-slim
 
@@ -11,6 +12,28 @@ FROM ${BASE_IMAGE} AS base
 FROM --platform=${BUILDPLATFORM} debian:11 AS base_host
 
 FROM ${SLIM_BASE} AS slim-base
+=======
+ARG BASE_IMAGE=debian:12
+ARG SLIM_BASE=debian:12-slim
+
+# A hook that allows us to inject commands right after the base images
+ARG BASE_HOOK=
+
+FROM ${BASE_IMAGE} AS base
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
+ARG BASE_HOOK
+
+RUN sh -c "$BASE_HOOK"
+
+FROM --platform=${BUILDPLATFORM} debian:12 AS base_host
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
+
+FROM ${SLIM_BASE} AS slim-base
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
+ARG BASE_HOOK
+
+RUN sh -c "$BASE_HOOK"
+>>>>>>> Stashed changes
 
 FROM slim-base AS wget
 ARG DEBIAN_FRONTEND
@@ -43,7 +66,7 @@ RUN --mount=type=tmpfs,target=/tmp --mount=type=tmpfs,target=/var/cache/apt \
 FROM scratch AS go2rtc
 ARG TARGETARCH
 WORKDIR /rootfs/usr/local/go2rtc/bin
-ADD --link --chmod=755 "https://github.com/AlexxIT/go2rtc/releases/download/v1.9.2/go2rtc_linux_${TARGETARCH}" go2rtc
+ADD --chmod=755 "https://github.com/AlexxIT/go2rtc/releases/download/v1.9.2/go2rtc_linux_${TARGETARCH}" go2rtc
 
 FROM wget AS tempio
 ARG TARGETARCH
@@ -73,7 +96,7 @@ RUN apt-get -qq update \
 RUN --mount=type=bind,source=docker/main/build_ov_model.py,target=/build_ov_model.py \
     mkdir /models && cd /models \
     && wget http://download.tensorflow.org/models/object_detection/ssdlite_mobilenet_v2_coco_2018_05_09.tar.gz \
-    && tar -xvf ssdlite_mobilenet_v2_coco_2018_05_09.tar.gz \
+    && tar -xvf ssdlite_mobilenet_v2_coco_2018_05_09.tar.gz --no-same-owner\
     && python3 /build_ov_model.py
 
 ####
